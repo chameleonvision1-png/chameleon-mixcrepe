@@ -22,8 +22,8 @@ export default async function AboutPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-8">
-      <div className="rounded-[32px] bg-[#0D0D0D] mix-pattern-dark text-white border-2 border-[#FFC21A]/40 p-6 sm:p-10 shadow-xl grid lg:grid-cols-12 gap-7 items-center">
-        <div className="lg:col-span-7 space-y-4 text-center lg:text-right">
+      <div className="rounded-[32px] bg-[#0D0D0D] mix-pattern-dark text-white border-2 border-[#FFC21A]/40 p-6 sm:p-10 shadow-xl grid grid-cols-1 lg:grid-cols-12 gap-7 items-center">
+        <div className="lg:col-span-7 min-w-0 space-y-4 text-center lg:text-right">
           <span className="inline-block rounded-full bg-[#FFC21A] text-[#0D0D0D] px-4 py-1 text-xs font-en-display font-black">
             MIX CREPE & PIZZA • BADR CITY
           </span>
@@ -54,7 +54,7 @@ export default async function AboutPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-5">
+        <div className="lg:col-span-5 min-w-0">
           <div className="rounded-[28px] overflow-hidden border-2 border-[#FFC21A] bg-[#171717]">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

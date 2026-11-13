@@ -1,12 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useStore } from "./store";
 import { useLockBodyScroll } from "@/lib/useLockBodyScroll";
 import {
-  ChevronDownIcon,
   ExternalLinkIcon,
   PhoneIcon,
   PinIcon,
@@ -15,10 +13,23 @@ import {
   XIcon,
 } from "./icons";
 
+function normalizeHours(hours: string): string {
+  if (!hours || hours.length > 34) {
+    return "مفتوح طوال اليوم";
+  }
+  return hours;
+}
+
+function normalizeService(label: string): string {
+  if (/Outdoor/i.test(label)) return "جلسات خارجية";
+  if (/Roadside/i.test(label)) return "تقديم للسيارة";
+  if (label === "استلام من المطعم") return "استلام من الفرع";
+  return label;
+}
+
 export default function BranchPicker() {
   const { pickerOpen, closePicker, branches, branchId, setBranchId } =
     useStore();
-  const [phonesOpenId, setPhonesOpenId] = useState<string | null>(null);
 
   useLockBodyScroll(pickerOpen);
 
@@ -80,11 +91,13 @@ export default function BranchPicker() {
         >
           {displayBranches.map((b) => {
             const selected = branchId === b.id;
-            const phonesExpanded = phonesOpenId === b.id;
-            const extraPhones = [
-              b.phone2,
-              ...(b.extraPhones ?? []),
-            ].filter((x): x is string => Boolean(x));
+            const allPhones = Array.from(
+              new Set(
+                [b.phone, b.phone2, ...(b.extraPhones ?? [])].filter(
+                  (x): x is string => Boolean(x),
+                ),
+              ),
+            );
 
             return (
               <div
@@ -97,108 +110,71 @@ export default function BranchPicker() {
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <span className="rounded-full bg-[#FFC21A] text-[#0D0D0D] px-2.5 py-0.5 text-[11px] font-black">
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <span className="rounded-full bg-[#FFC21A] text-[#0D0D0D] px-2.5 py-0.5 text-[11px] font-black whitespace-nowrap">
                         {b.city}
                       </span>
-                      <span className="rounded-full bg-[#0D0D0D] text-[#FFC21A] px-2.5 py-0.5 text-[11px] font-black">
-                        {b.hours}
+                      <span className="rounded-full bg-[#0D0D0D] text-[#FFC21A] px-2.5 py-0.5 text-[11px] font-black whitespace-nowrap">
+                        {normalizeHours(b.hours)}
                       </span>
                     </div>
                     <h4 className="font-display text-base font-black text-[#0D0D0D] mt-2">
                       {b.name}
                     </h4>
-                    <p className="text-xs font-bold text-[#0D0D0D]/70 mt-0.5">
+                    <p className="text-xs font-bold text-[#0D0D0D]/70 mt-0.5 leading-relaxed">
                       {b.address}
                     </p>
                   </div>
                 </div>
 
-                {/* Primary Contact Grid */}
+                {/* Direct Phone Numbers Row */}
                 <div
                   className="grid grid-cols-2 gap-2"
                   dir="ltr"
                   onClick={(e) => e.stopPropagation()}
                 >
-                  <a
-                    href={`tel:${b.phone}`}
-                    className="h-11 rounded-2xl bg-[#FFC21A] hover:bg-[#F59E0B] text-[#0D0D0D] px-3 flex items-center justify-center gap-1.5 text-xs font-en font-black transition shadow-2xs"
-                  >
-                    <PhoneIcon className="w-3.5 h-3.5 shrink-0" />
-                    <span>{b.phone}</span>
-                  </a>
+                  {allPhones.slice(0, 2).map((ph, idx) => (
+                    <a
+                      key={ph}
+                      href={`tel:${ph}`}
+                      className={`h-10 rounded-2xl px-3 flex items-center justify-center gap-1.5 text-xs font-en font-black transition shadow-2xs ${
+                        idx === 0
+                          ? "bg-[#FFC21A] hover:bg-[#F59E0B] text-[#0D0D0D]"
+                          : "bg-[#FFF3D6] hover:bg-[#FFC21A] text-[#0D0D0D] border border-[#0D0D0D]/15"
+                      }`}
+                    >
+                      <PhoneIcon className="w-3.5 h-3.5 shrink-0" />
+                      <span>{ph}</span>
+                    </a>
+                  ))}
+                </div>
 
+                {/* WhatsApp + Google Maps Row */}
+                <div
+                  className="grid grid-cols-2 gap-2"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <a
                     href={`https://wa.me/${b.whatsapp}`}
                     target="_blank"
                     rel="noreferrer"
-                    dir="rtl"
-                    className="h-11 rounded-2xl bg-[#0D0D0D] hover:bg-black text-[#FFC21A] px-3 flex items-center justify-center gap-1.5 text-xs font-black transition shadow-2xs"
+                    className="h-10 rounded-2xl bg-[#0D0D0D] hover:bg-black text-[#FFC21A] px-3 flex items-center justify-center gap-1.5 text-xs font-black transition shadow-2xs"
                   >
                     <WhatsAppIcon className="w-4 h-4 shrink-0" />
                     <span>طلب واتساب</span>
                   </a>
-                </div>
 
-                {/* Secondary Row: Extra Phones + Google Maps */}
-                <div
-                  className="space-y-2"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setPhonesOpenId((prev) =>
-                          prev === b.id ? null : b.id,
-                        )
-                      }
-                      aria-expanded={phonesExpanded}
-                      className="h-10 rounded-2xl bg-[#FFF3D6] hover:bg-[#FFC21A]/40 border border-[#0D0D0D]/15 px-3 flex items-center justify-between gap-1.5 text-xs font-black text-[#0D0D0D] transition cursor-pointer"
-                    >
-                      <span className="flex items-center gap-1.5 truncate">
-                        <PhoneIcon className="w-3.5 h-3.5 text-[#F59E0B] shrink-0" />
-                        <span className="truncate">
-                          خط آخر ({extraPhones.length})
-                        </span>
-                      </span>
-                      <ChevronDownIcon
-                        className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
-                          phonesExpanded ? "rotate-180" : ""
-                        }`}
-                      />
-                    </button>
-
-                    <a
-                      href={b.mapUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="h-10 rounded-2xl bg-[#FFF3D6] hover:bg-[#FFC21A] text-[#0D0D0D] border border-[#0D0D0D]/15 px-3 flex items-center justify-center gap-1.5 text-xs font-black transition"
-                    >
-                      <PinIcon className="w-3.5 h-3.5 text-[#F59E0B] shrink-0" />
-                      <span className="truncate">خريطة مول 8</span>
-                      <ExternalLinkIcon className="w-3 h-3 shrink-0" />
-                    </a>
-                  </div>
-
-                  {phonesExpanded && extraPhones.length > 0 && (
-                    <div
-                      className="rounded-2xl bg-[#FFF3D6] border border-[#0D0D0D]/14 p-2.5 grid grid-cols-2 gap-2"
-                      dir="ltr"
-                    >
-                      {extraPhones.map((ph) => (
-                        <a
-                          key={ph}
-                          href={`tel:${ph}`}
-                          className="h-9 rounded-xl bg-white hover:bg-[#0D0D0D] text-[#0D0D0D] hover:text-[#FFC21A] border border-[#0D0D0D]/15 px-2.5 flex items-center justify-center gap-1.5 text-xs font-en font-extrabold transition"
-                        >
-                          <PhoneIcon className="w-3 h-3 shrink-0" />
-                          <span>{ph}</span>
-                        </a>
-                      ))}
-                    </div>
-                  )}
+                  <a
+                    href={b.mapUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="h-10 rounded-2xl bg-[#FFF3D6] hover:bg-[#FFC21A] text-[#0D0D0D] border border-[#0D0D0D]/15 px-3 flex items-center justify-center gap-1.5 text-xs font-black transition"
+                  >
+                    <PinIcon className="w-3.5 h-3.5 text-[#F59E0B] shrink-0" />
+                    <span>خريطة مول 8</span>
+                    <ExternalLinkIcon className="w-3 h-3 shrink-0" />
+                  </a>
                 </div>
 
                 {/* Branch Services 2x2 Grid */}
@@ -206,9 +182,9 @@ export default function BranchPicker() {
                   {b.services.slice(0, 4).map((s) => (
                     <div
                       key={s}
-                      className="rounded-xl bg-[#FFF3D6] border border-[#0D0D0D]/12 py-2 px-2.5 text-center text-[11px] font-extrabold text-[#0D0D0D]/85 truncate"
+                      className="rounded-xl bg-[#FFF3D6] border border-[#0D0D0D]/12 py-2 px-2.5 text-center text-[11px] font-extrabold text-[#0D0D0D]/85 whitespace-nowrap"
                     >
-                      {s}
+                      {normalizeService(s)}
                     </div>
                   ))}
                 </div>

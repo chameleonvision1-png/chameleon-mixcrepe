@@ -24,87 +24,76 @@ export default function ReviewsBannerCarousel({
 
   return (
     <section className="mx-auto max-w-7xl px-3.5 sm:px-6 lg:px-8 py-6">
-      <div className="relative rounded-[30px] sm:rounded-[38px] overflow-hidden bg-[#0D0D0D] border-2 border-[#FFC21A]/35 shadow-[0_22px_50px_-20px_rgba(13,13,13,0.55)]">
+      {/* Centered Heading Above Card */}
+      <div className="text-center mb-5 space-y-2">
+        <div className="inline-flex items-center justify-center rounded-full bg-[#FFC21A] text-[#0D0D0D] px-4 py-1 text-xs font-black shadow-2xs">
+          <span>100% يوصون بنا • +61,000 متابع على فيسبوك</span>
+        </div>
+
+        <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-black text-[#0D0D0D] leading-tight">
+          كلام أهل مدينة بدر <span className="text-[#F59E0B]">فينا</span>
+        </h2>
+      </div>
+
+      {/* Symmetrical Dark Photo Backdrop + Floating Center Quote Card */}
+      <div className="relative rounded-[28px] sm:rounded-[36px] overflow-hidden bg-[#0D0D0D] border-2 border-[#FFC21A]/40 shadow-[0_22px_50px_-20px_rgba(13,13,13,0.55)] px-4 pt-6 pb-10 sm:p-10 lg:p-12 flex items-center justify-center">
         {/* Background Backdrop Photo */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src="/images/hero/reviews-backdrop.webp"
           alt="تقييمات عملاء MIX Crepe & Pizza"
-          className="absolute inset-0 w-full h-full object-cover opacity-28"
+          className="absolute inset-0 w-full h-full object-cover opacity-30"
         />
         <div
-          className="absolute inset-0 bg-gradient-to-l from-[#0D0D0D]/95 via-[#0D0D0D]/88 to-[#0D0D0D]/75"
+          className="absolute inset-0 bg-[#0D0D0D]/72"
           aria-hidden="true"
         />
 
-        <div className="relative z-10 p-6 sm:p-10 lg:p-12 grid lg:grid-cols-12 gap-6 items-center">
-          {/* Social Proof Headline Column */}
-          <div className="lg:col-span-5 text-center lg:text-right space-y-3">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#FFC21A] text-[#0D0D0D] px-4 py-1 text-xs font-black">
-              <span>100% يوصون بنا • 83 مراجعة حقيقية</span>
+        <figure className="relative z-10 w-full max-w-2xl mx-auto rounded-[24px] bg-[#FFF3D6] text-[#0D0D0D] border-2 border-[#FFC21A] px-5 sm:px-8 pt-5 sm:pt-6 pb-8 sm:pb-9 text-center shadow-2xl min-w-0">
+          <div className="flex flex-wrap items-center justify-center gap-2.5 mb-3">
+            <div className="flex items-center gap-1 text-[#F59E0B]">
+              {Array.from({ length: current.rating || 5 }).map((_, i) => (
+                <StarIcon key={i} className="w-4 h-4 fill-[#F59E0B]" />
+              ))}
             </div>
-
-            <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-black text-white leading-tight">
-              كلام أهل مدينة بدر <span className="text-[#FFC21A]">فينا</span>
-            </h2>
-
-            <p className="text-xs sm:text-sm font-bold text-white/80 leading-relaxed max-w-md mx-auto lg:mx-0">
-              أكثر من{" "}
-              <span className="font-en text-[#FFC21A] font-black">61,000+</span>{" "}
-              متابع على فيسبوك يشاركونا حبهم للكريب الساخن والبيتزا الإيطالي من
-              مول 8.
-            </p>
+            <span className="rounded-full bg-[#0D0D0D] text-[#FFC21A] px-3 py-0.5 text-[11px] font-black">
+              تجربة موثقة
+            </span>
           </div>
 
-          {/* Review Quote Card */}
-          <div className="lg:col-span-7">
-            <div className="rounded-[26px] bg-[#FFF3D6] text-[#0D0D0D] p-5 sm:p-7 border-2 border-[#FFC21A] shadow-xl">
-              <div className="flex items-center justify-between gap-2 mb-3">
-                <div className="flex items-center gap-1 text-[#F59E0B]">
-                  {Array.from({ length: current.rating || 5 }).map((_, i) => (
-                    <StarIcon key={i} className="w-4 h-4 fill-[#F59E0B]" />
-                  ))}
-                </div>
-                <span className="rounded-full bg-[#0D0D0D] text-[#FFC21A] px-3 py-0.5 text-[11px] font-black">
-                  تجربة موثقة
-                </span>
-              </div>
+          <blockquote className="text-sm sm:text-base lg:text-lg font-extrabold text-[#0D0D0D] leading-relaxed break-words">
+            «{current.text}»
+          </blockquote>
 
-              <p className="text-sm sm:text-base font-extrabold text-[#0D0D0D] leading-relaxed min-h-[56px]">
-                «{current.text}»
-              </p>
+          <figcaption className="mt-3 text-xs sm:text-sm font-black text-[#0D0D0D]/80 break-words">
+            {current.name}
+          </figcaption>
 
-              <div className="mt-4 pt-3 border-t border-[#0D0D0D]/12 flex items-center justify-between gap-3">
-                <span className="text-xs sm:text-sm font-black text-[#0D0D0D] truncate">
-                  {current.name}
-                </span>
-
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setIdx(
-                        (prev) => (prev - 1 + reviews.length) % reviews.length,
-                      )
-                    }
-                    aria-label="التقييم السابق"
-                    className="w-8 h-8 rounded-full bg-white hover:bg-[#0D0D0D] text-[#0D0D0D] hover:text-[#FFC21A] border border-[#0D0D0D]/15 grid place-items-center transition cursor-pointer"
-                  >
-                    <ChevronIcon className="w-3.5 h-3.5 rotate-180" />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setIdx((prev) => (prev + 1) % reviews.length)}
-                    aria-label="التقييم التالي"
-                    className="w-8 h-8 rounded-full bg-white hover:bg-[#0D0D0D] text-[#0D0D0D] hover:text-[#FFC21A] border border-[#0D0D0D]/15 grid place-items-center transition cursor-pointer"
-                  >
-                    <ChevronIcon className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              </div>
-            </div>
+          {/* Overlapping Symmetrical Prev/Next Navigation Buttons */}
+          <div
+            dir="ltr"
+            className="absolute -bottom-5 left-1/2 -translate-x-1/2 flex items-center gap-2.5"
+          >
+            <button
+              type="button"
+              onClick={() =>
+                setIdx((prev) => (prev - 1 + reviews.length) % reviews.length)
+              }
+              aria-label="التقييم السابق"
+              className="w-10 h-10 rounded-full bg-[#0D0D0D] hover:bg-black text-[#FFC21A] ring-4 ring-[#FFF3D6] grid place-items-center transition cursor-pointer shadow-md"
+            >
+              <ChevronIcon className="w-4 h-4 rotate-180" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setIdx((prev) => (prev + 1) % reviews.length)}
+              aria-label="التقييم التالي"
+              className="w-10 h-10 rounded-full bg-[#FFC21A] hover:bg-[#F59E0B] text-[#0D0D0D] ring-4 ring-[#FFF3D6] grid place-items-center transition cursor-pointer shadow-md"
+            >
+              <ChevronIcon className="w-4 h-4" />
+            </button>
           </div>
-        </div>
+        </figure>
       </div>
     </section>
   );

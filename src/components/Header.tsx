@@ -66,7 +66,6 @@ export function Header({
   branches?: Branch[];
 }) {
   const pathname = usePathname();
-  const isMenuPage = pathname?.startsWith("/menu") ?? false;
 
   const { cart, hydrated, openPicker } = useStore();
   const count = cart.reduce((sum, item) => sum + item.qty, 0);
@@ -77,7 +76,7 @@ export function Header({
 
   const [openSection, setOpenSection] = useState<
     "cats" | "pages" | "phones" | null
-  >("cats");
+  >(null);
   const [qrOpen, setQrOpen] = useState(false);
 
   // PWA Install Prompt
@@ -194,101 +193,95 @@ export function Header({
     <>
       <header
         dir="ltr"
-        className="sticky top-0 z-50 px-2.5 sm:px-6 pt-2.5 sm:pt-3 pb-1 pointer-events-none"
+        className="sticky top-0 z-50 bg-[#FFF3D6]/95 backdrop-blur-md border-b border-[#0D0D0D]/12 shadow-[0_6px_20px_-12px_rgba(13,13,13,0.22)]"
       >
-        <div className="max-w-7xl mx-auto pointer-events-auto">
-          <div className="h-14 sm:h-16 rounded-full bg-[#FFF3D6]/95 backdrop-blur-md border border-[#0D0D0D]/15 shadow-[0_10px_28px_-12px_rgba(13,13,13,0.32)] px-3 sm:px-5 flex items-center justify-between gap-2">
-            {/* Far Left: Logo ONLY (strictly no adjacent text) */}
-            <Link
-              href="/"
-              aria-label="MIX Crepe & Pizza"
-              className="shrink-0 flex items-center"
+        <div className="max-w-7xl mx-auto h-16 sm:h-[72px] px-3.5 sm:px-6 flex items-center justify-between gap-3">
+          {/* Far Left: Authentic Horizontal Logo */}
+          <Link
+            href="/"
+            aria-label="MIX Crepe & Pizza"
+            className="shrink-0 flex items-center"
+          >
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/logo-horizontal.webp"
+              alt="MIX Crepe & Pizza"
+              className="h-9 sm:h-11 w-auto max-w-[168px] sm:max-w-[215px] object-contain select-none"
+            />
+          </Link>
+
+          {/* Center: Desktop Nav (RTL order) */}
+          <nav
+            dir="rtl"
+            aria-label="التنقل الرئيسي"
+            className="hidden lg:flex items-center gap-1"
+          >
+            {desktopNav.map((item) => {
+              const active =
+                item.href === "/"
+                  ? pathname === "/"
+                  : pathname?.startsWith(item.href);
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={`px-3.5 py-2 rounded-full text-xs xl:text-sm font-black transition whitespace-nowrap ${
+                    active
+                      ? "bg-[#0D0D0D] text-[#FFC21A]"
+                      : "text-[#0D0D0D] hover:bg-[#0D0D0D]/8"
+                  }`}
+                >
+                  {item.label}
+                </Link>
+              );
+            })}
+
+            <button
+              type="button"
+              onClick={openBuilder}
+              className="px-3.5 py-2 rounded-full bg-[#FFC21A] hover:bg-[#F59E0B] text-[#0D0D0D] text-xs xl:text-sm font-black inline-flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={isMenuPage ? "/logo-horizontal.webp" : "/logo-mobile.webp"}
-                alt="MIX Crepe & Pizza"
-                className={
-                  isMenuPage
-                    ? "h-8 sm:h-10 w-auto max-w-[155px] sm:max-w-[200px] object-contain"
-                    : "h-9 sm:h-11 w-auto max-w-[130px] sm:max-w-[165px] object-contain"
-                }
-              />
+              <CustomizeSlidersIcon className="w-3.5 h-3.5 shrink-0" />
+              <span>مكسها على مزاجك</span>
+            </button>
+          </nav>
+
+          {/* Far Right: Cart + Burger Menu */}
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/cart"
+              aria-label="سلة الطلبات"
+              className="relative h-10 sm:h-11 px-3 sm:px-4 rounded-full bg-[#0D0D0D] hover:bg-[#171717] text-[#FFC21A] flex items-center gap-1.5 text-xs font-black transition shadow-xs"
+            >
+              <CartIcon className="w-4 h-4 shrink-0" />
+              <span dir="rtl" className="hidden sm:inline">
+                السلة
+              </span>
+              {hydrated && count > 0 && (
+                <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#FFC21A] text-[#0D0D0D] text-[11px] font-en font-black grid place-items-center tabular-nums">
+                  {count}
+                </span>
+              )}
             </Link>
 
-            {/* Center: Desktop Nav (RTL order) */}
-            <nav
-              dir="rtl"
-              aria-label="التنقل الرئيسي"
-              className="hidden lg:flex items-center gap-1"
+            <button
+              type="button"
+              onClick={openDrawer}
+              aria-label="فتح القائمة"
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white hover:bg-[#FFC21A] text-[#0D0D0D] border border-[#0D0D0D]/15 grid place-items-center transition cursor-pointer"
             >
-              {desktopNav.map((item) => {
-                const active =
-                  item.href === "/"
-                    ? pathname === "/"
-                    : pathname?.startsWith(item.href);
-                return (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className={`px-3.5 py-2 rounded-full text-xs xl:text-sm font-black transition whitespace-nowrap ${
-                      active
-                        ? "bg-[#0D0D0D] text-[#FFC21A]"
-                        : "text-[#0D0D0D] hover:bg-[#0D0D0D]/8"
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
-                );
-              })}
-
-              <button
-                type="button"
-                onClick={openBuilder}
-                className="px-3.5 py-2 rounded-full bg-[#FFC21A] hover:bg-[#F59E0B] text-[#0D0D0D] text-xs xl:text-sm font-black inline-flex items-center gap-1.5 transition cursor-pointer whitespace-nowrap"
-              >
-                <CustomizeSlidersIcon className="w-3.5 h-3.5 shrink-0" />
-                <span>مكسها على مزاجك</span>
-              </button>
-            </nav>
-
-            {/* Far Right: Cart + Burger Menu */}
-            <div className="flex items-center gap-2 shrink-0">
-              <Link
-                href="/cart"
-                aria-label="سلة الطلبات"
-                className="relative h-10 sm:h-11 px-3 sm:px-4 rounded-full bg-[#0D0D0D] hover:bg-[#171717] text-[#FFC21A] flex items-center gap-1.5 text-xs font-black transition shadow-xs"
-              >
-                <CartIcon className="w-4 h-4 shrink-0" />
-                <span dir="rtl" className="hidden sm:inline">
-                  السلة
-                </span>
-                {hydrated && count > 0 && (
-                  <span className="min-w-[20px] h-5 px-1.5 rounded-full bg-[#FFC21A] text-[#0D0D0D] text-[11px] font-en font-black grid place-items-center tabular-nums">
-                    {count}
-                  </span>
-                )}
-              </Link>
-
-              <button
-                type="button"
-                onClick={openDrawer}
-                aria-label="فتح القائمة"
-                className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-white hover:bg-[#FFC21A] text-[#0D0D0D] border border-[#0D0D0D]/15 grid place-items-center transition cursor-pointer"
-              >
-                <MenuIcon className="w-5 h-5" />
-              </button>
-            </div>
+              <MenuIcon className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Portal Slide-over Navigation Drawer */}
+      {/* Portal Slide-over Navigation Drawer — Strictly Anchored to the RIGHT */}
       {open &&
         typeof document !== "undefined" &&
         createPortal(
           <div
-            dir="rtl"
+            dir="ltr"
             className="fixed inset-0 z-[90] flex justify-end overscroll-none"
             role="dialog"
             aria-modal="true"
@@ -299,7 +292,10 @@ export function Header({
               onClick={closeDrawer}
             />
 
-            <aside className="relative z-10 w-[90vw] max-w-[390px] h-full bg-[#FFF3D6] border-r-2 border-[#FFC21A] shadow-2xl flex flex-col overflow-hidden">
+            <aside
+              dir="rtl"
+              className="relative z-10 w-[88vw] max-w-[380px] h-full bg-[#FFF3D6] border-l-2 border-[#FFC21A] shadow-2xl flex flex-col overflow-hidden animate-drawer-right"
+            >
               {/* 1. Drawer Top Header */}
               <div
                 dir="ltr"
@@ -521,25 +517,23 @@ export function Header({
                 )}
 
                 {/* Symmetrical 4-Icon Official Social Bar */}
-                <div className="pt-1">
-                  <div className="grid grid-cols-4 gap-2">
-                    {SOCIAL_ITEMS.map((item) => {
-                      const Icon = item.icon;
-                      return (
-                        <a
-                          key={item.label}
-                          href={item.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          aria-label={item.label}
-                          title={item.label}
-                          className="h-11 rounded-2xl bg-white hover:bg-[#0D0D0D] text-[#0D0D0D] hover:text-[#FFC21A] border border-[#0D0D0D]/15 grid place-items-center transition"
-                        >
-                          <Icon className="w-4 h-4" />
-                        </a>
-                      );
-                    })}
-                  </div>
+                <div className="pt-1 pb-3 flex items-center justify-center gap-2.5">
+                  {SOCIAL_ITEMS.map((item) => {
+                    const Icon = item.icon;
+                    return (
+                      <a
+                        key={item.label}
+                        href={item.href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        aria-label={item.label}
+                        title={item.label}
+                        className="w-10 h-10 rounded-full bg-white hover:bg-[#0D0D0D] text-[#0D0D0D] hover:text-[#FFC21A] border border-[#0D0D0D]/15 grid place-items-center transition shadow-2xs"
+                      >
+                        <Icon className="w-4 h-4" />
+                      </a>
+                    );
+                  })}
                 </div>
               </div>
 

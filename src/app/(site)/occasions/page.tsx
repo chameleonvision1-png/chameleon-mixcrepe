@@ -16,8 +16,8 @@ export default async function OccasionsPage() {
   const activeBranches = db.branches.filter((b) => b.isActive);
 
   return (
-    <div className="mx-auto max-w-6xl px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10 grid lg:grid-cols-12 gap-7 items-start">
-      <div className="lg:col-span-6 space-y-5">
+    <div className="mx-auto max-w-6xl px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10 grid grid-cols-1 lg:grid-cols-12 gap-7 items-start">
+      <div className="lg:col-span-6 min-w-0 space-y-5">
         <div className="rounded-[30px] bg-[#0D0D0D] mix-pattern-dark text-white border-2 border-[#FFC21A]/35 p-6 sm:p-8 shadow-xl space-y-3">
           <span className="inline-block rounded-full bg-[#FFC21A] text-[#0D0D0D] px-3.5 py-1 text-xs font-black">
             تجمعات الطلبة والشركات والعزومات
@@ -60,7 +60,7 @@ export default async function OccasionsPage() {
         </div>
       </div>
 
-      <div className="lg:col-span-6">
+      <div className="lg:col-span-6 min-w-0">
         <OccasionForm branches={activeBranches.length ? activeBranches : db.branches} />
       </div>
     </div>

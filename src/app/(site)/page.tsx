@@ -109,10 +109,10 @@ export default async function HomePage() {
 
       {/* 2. Brand Introduction + Verified Social Proof Strip */}
       <section className="mx-auto max-w-7xl px-3.5 sm:px-6 lg:px-8 pt-6 sm:pt-10">
-        <div className="rounded-[30px] sm:rounded-[38px] bg-white border border-[#0D0D0D]/14 p-5 sm:p-8 lg:p-10 shadow-[0_14px_38px_-20px_rgba(13,13,13,0.16)] grid lg:grid-cols-12 gap-6 items-center">
-          <div className="lg:col-span-7 text-center lg:text-right space-y-4">
+        <div className="rounded-[30px] sm:rounded-[38px] bg-white border border-[#0D0D0D]/14 p-5 sm:p-8 lg:p-10 shadow-[0_14px_38px_-20px_rgba(13,13,13,0.16)] grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
+          <div className="lg:col-span-7 min-w-0 text-center lg:text-right space-y-4">
             <div className="inline-flex items-center gap-2 rounded-full bg-[#FFC21A] text-[#0D0D0D] px-4 py-1 text-xs font-en-display font-black tracking-wide">
-              <span>GOLDEN STREET FOOD • MIX CREPE & PIZZA</span>
+              <span>GOLDEN STREET FOOD</span>
             </div>
 
             <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-black text-[#0D0D0D] leading-tight">
@@ -182,7 +182,7 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="lg:col-span-5">
+          <div className="lg:col-span-5 min-w-0">
             <div className="relative rounded-[28px] overflow-hidden border-2 border-[#FFC21A] bg-[#0D0D0D] aspect-[4/3] shadow-lg">
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img

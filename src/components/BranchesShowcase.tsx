@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
 import type { Branch, Settings } from "@/lib/types";
 import {
-  ChevronDownIcon,
   ClockIcon,
   ExternalLinkIcon,
   PhoneIcon,
@@ -15,13 +13,27 @@ import {
 } from "./icons";
 
 const BADR_NEIGHBORHOODS = [
-  "شارع الجامعة الروسية والمنطقة المحيطة",
+  "شارع الجامعة الروسية والمجاورة",
   "الحي الأول والحي الثاني",
   "الحي الثالث والحي الرابع",
   "الحي الخامس والحي السادس",
-  "الحي المتميز ومنطقة النرجس والياسمين",
+  "الحي المتميز والنرجس والياسمين",
   "سكن مصر والأندلس وزهرة العاصمة",
 ];
+
+function normalizeHours(hours: string): string {
+  if (!hours || hours.length > 34) {
+    return "مفتوح طوال اليوم • توصيل سريع";
+  }
+  return hours;
+}
+
+function normalizeService(label: string): string {
+  if (/Outdoor/i.test(label)) return "جلسات خارجية";
+  if (/Roadside/i.test(label)) return "تقديم للسيارة";
+  if (label === "استلام من المطعم") return "استلام من الفرع";
+  return label;
+}
 
 export default function BranchesShowcase({
   branches,
@@ -30,9 +42,6 @@ export default function BranchesShowcase({
   branches: Branch[];
   settings?: Settings;
 }) {
-  const [phonesOpenId, setPhonesOpenId] = useState<string | null>(null);
-  const [zonesOpen, setZonesOpen] = useState(false);
-
   const visibleBranches = branches.filter((b) => b.isActive);
   const list = visibleBranches.length ? visibleBranches : branches.slice(0, 1);
 
@@ -52,7 +61,6 @@ export default function BranchesShowcase({
             ),
           ),
         );
-        const phonesExpanded = phonesOpenId === b.id;
 
         return (
           <div
@@ -61,31 +69,31 @@ export default function BranchesShowcase({
           >
             <div>
               <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFC21A] text-[#0D0D0D] px-3 py-1 text-xs font-black">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFC21A] text-[#0D0D0D] px-3 py-1 text-xs font-black whitespace-nowrap">
                   <PinIcon className="w-3.5 h-3.5 shrink-0" />
                   <span>{b.city}</span>
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0D0D0D] text-[#FFC21A] px-3 py-1 text-xs font-black">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0D0D0D] text-[#FFC21A] px-3 py-1 text-xs font-black whitespace-nowrap">
                   <ClockIcon className="w-3.5 h-3.5 shrink-0" />
-                  <span>{b.hours}</span>
+                  <span>{normalizeHours(b.hours)}</span>
                 </span>
               </div>
 
-              <h3 className="font-display text-xl sm:text-2xl font-black text-[#0D0D0D]">
+              <h3 className="font-display text-xl sm:text-2xl font-black text-[#0D0D0D] leading-snug">
                 {b.name}
               </h3>
               <p className="text-xs sm:text-sm font-bold text-[#0D0D0D]/75 mt-1.5 leading-relaxed">
                 {b.address}
               </p>
 
-              {/* Services 2x2 Grid */}
+              {/* Services 2x2 Grid — Pure Crisp Arabic */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-4">
                 {b.services.slice(0, 4).map((svc) => (
                   <div
                     key={svc}
-                    className="rounded-xl bg-[#FFF3D6] border border-[#0D0D0D]/10 px-2.5 py-2 text-center text-[11px] font-black text-[#0D0D0D] truncate"
+                    className="rounded-xl bg-[#FFF3D6] border border-[#0D0D0D]/10 px-2.5 py-2 text-center text-[11px] sm:text-xs font-black text-[#0D0D0D] whitespace-nowrap"
                   >
-                    {svc}
+                    {normalizeService(svc)}
                   </div>
                 ))}
               </div>
@@ -96,7 +104,7 @@ export default function BranchesShowcase({
               <div className="grid grid-cols-2 gap-2">
                 <Link
                   href="/menu"
-                  className="h-11 rounded-2xl bg-[#0D0D0D] hover:bg-[#171717] text-[#FFC21A] px-3 flex items-center justify-center gap-1.5 text-xs sm:text-sm font-black transition shadow-xs"
+                  className="h-11 rounded-2xl bg-[#0D0D0D] hover:bg-[#171717] text-[#FFC21A] px-3 flex items-center justify-center gap-1.5 text-xs sm:text-sm font-black transition shadow-xs whitespace-nowrap"
                 >
                   <span>تصفح المنيو والطلب</span>
                 </Link>
@@ -105,39 +113,34 @@ export default function BranchesShowcase({
                   href={`https://wa.me/${b.whatsapp}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="h-11 rounded-2xl bg-[#FFC21A] hover:bg-[#F59E0B] text-[#0D0D0D] px-3 flex items-center justify-center gap-1.5 text-xs sm:text-sm font-black transition shadow-xs"
+                  className="h-11 rounded-2xl bg-[#FFC21A] hover:bg-[#F59E0B] text-[#0D0D0D] px-3 flex items-center justify-center gap-1.5 text-xs sm:text-sm font-black transition shadow-xs whitespace-nowrap"
                 >
                   <WhatsAppIcon className="w-4 h-4 shrink-0" />
                   <span>طلب واتساب</span>
                 </a>
               </div>
 
-              {/* Secondary Row: Phones Dropdown + Google Maps + Talabat */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setPhonesOpenId((prev) => (prev === b.id ? null : b.id))
-                  }
-                  aria-expanded={phonesExpanded}
-                  className="h-10 rounded-2xl bg-[#FFF3D6] hover:bg-[#FFC21A]/45 border border-[#0D0D0D]/15 px-3 flex items-center justify-between gap-1.5 text-xs font-black text-[#0D0D0D] transition cursor-pointer"
-                >
-                  <span className="flex items-center gap-1.5 truncate">
+              {/* Direct Clickable Phone Lines (2 Cols) */}
+              <div className="grid grid-cols-2 gap-2" dir="ltr">
+                {allPhones.slice(0, 2).map((ph) => (
+                  <a
+                    key={ph}
+                    href={`tel:${ph}`}
+                    className="h-10 rounded-2xl bg-[#FFF3D6] hover:bg-[#FFC21A] border border-[#0D0D0D]/15 px-3 flex items-center justify-center gap-1.5 text-xs font-en font-black text-[#0D0D0D] transition whitespace-nowrap"
+                  >
                     <PhoneIcon className="w-3.5 h-3.5 text-[#F59E0B] shrink-0" />
-                    <span>أرقام التوصيل ({allPhones.length})</span>
-                  </span>
-                  <ChevronDownIcon
-                    className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ${
-                      phonesExpanded ? "rotate-180" : ""
-                    }`}
-                  />
-                </button>
+                    <span>{ph}</span>
+                  </a>
+                ))}
+              </div>
 
+              {/* Symmetrical Map & Talabat Row (2 Cols) */}
+              <div className="grid grid-cols-2 gap-2">
                 <a
                   href={b.mapUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="h-10 rounded-2xl bg-white hover:bg-[#FFF3D6] border border-[#0D0D0D]/15 px-3 flex items-center justify-center gap-1.5 text-xs font-black text-[#0D0D0D] transition"
+                  className="h-10 rounded-2xl bg-white hover:bg-[#FFF3D6] border border-[#0D0D0D]/15 px-3 flex items-center justify-center gap-1.5 text-xs font-black text-[#0D0D0D] transition whitespace-nowrap"
                 >
                   <PinIcon className="w-3.5 h-3.5 text-[#F59E0B] shrink-0" />
                   <span>الموقع على الخريطة</span>
@@ -148,36 +151,18 @@ export default function BranchesShowcase({
                   href={talabatUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="h-10 rounded-2xl bg-white hover:bg-[#FFF3D6] border border-[#0D0D0D]/15 px-3 flex items-center justify-center gap-1.5 text-xs font-black text-[#0D0D0D] transition"
+                  className="h-10 rounded-2xl bg-white hover:bg-[#FFF3D6] border border-[#0D0D0D]/15 px-3 flex items-center justify-center gap-1.5 text-xs font-black text-[#0D0D0D] transition whitespace-nowrap"
                 >
                   <TalabatIcon className="w-3.5 h-3.5 text-[#F59E0B] shrink-0" />
                   <span>اطلب من طلبات</span>
                 </a>
               </div>
-
-              {phonesExpanded && (
-                <div
-                  className="rounded-2xl bg-[#FFF3D6] border border-[#0D0D0D]/14 p-2.5 grid grid-cols-2 gap-2"
-                  dir="ltr"
-                >
-                  {allPhones.map((ph) => (
-                    <a
-                      key={ph}
-                      href={`tel:${ph}`}
-                      className="h-9 rounded-xl bg-white hover:bg-[#0D0D0D] text-[#0D0D0D] hover:text-[#FFC21A] border border-[#0D0D0D]/15 px-2.5 flex items-center justify-center gap-1.5 text-xs font-en font-black transition"
-                    >
-                      <PhoneIcon className="w-3 h-3 shrink-0" />
-                      <span>{ph}</span>
-                    </a>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
         );
       })}
 
-      {/* Badr City Delivery Zones Card (5 cols) */}
+      {/* Badr City Delivery Zones Card (5 cols) — Clean Symmetrical Grid */}
       <div className="lg:col-span-5 rounded-[28px] sm:rounded-[34px] bg-[#0D0D0D] mix-pattern-dark text-white p-5 sm:p-7 flex flex-col justify-between relative overflow-hidden border border-[#FFC21A]/30 shadow-lg min-w-0">
         <div
           className="pointer-events-none absolute -bottom-16 -left-16 w-52 h-52 rounded-full bg-[#FFC21A]/15 blur-2xl"
@@ -186,11 +171,11 @@ export default function BranchesShowcase({
 
         <div className="relative z-10">
           <div className="flex items-center justify-between gap-2 mb-3">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFC21A] text-[#0D0D0D] px-3 py-1 text-[11px] font-black">
-              <ScooterIcon className="w-3.5 h-3.5" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFC21A] text-[#0D0D0D] px-3 py-1 text-[11px] font-black whitespace-nowrap">
+              <ScooterIcon className="w-3.5 h-3.5 shrink-0" />
               <span>نطاق التوصيل السريع</span>
             </span>
-            <span className="text-xs font-bold text-[#FFF3D6]/80">
+            <span className="text-xs font-bold text-[#FFF3D6]/80 whitespace-nowrap">
               {BADR_NEIGHBORHOODS.length} مناطق مخدومة
             </span>
           </div>
@@ -203,51 +188,16 @@ export default function BranchesShowcase({
             بسرعة لكل أحياء ومجاورات مدينة بدر.
           </p>
 
-          {!zonesOpen && (
-            <div className="mt-4 flex overflow-x-auto no-scrollbar items-center gap-2 pb-1">
-              {BADR_NEIGHBORHOODS.map((zone) => (
-                <span
-                  key={zone}
-                  className="shrink-0 whitespace-nowrap rounded-full bg-white/10 border border-[#FFC21A]/25 px-3.5 py-1.5 text-xs font-extrabold text-[#FFF3D6]"
-                >
-                  {zone}
-                </span>
-              ))}
-            </div>
-          )}
-
-          <div className="mt-3.5 rounded-2xl bg-white/8 border border-white/15 overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setZonesOpen((v) => !v)}
-              aria-expanded={zonesOpen}
-              className="w-full px-4 py-2.5 flex items-center justify-between text-xs font-black text-[#FFC21A] hover:text-white transition cursor-pointer"
-            >
-              <span>
-                {zonesOpen
-                  ? "إخفاء قائمة أحياء التوصيل"
-                  : "عرض كل أحياء ومناطق التوصيل"}
-              </span>
-              <ChevronDownIcon
-                className={`w-4 h-4 transition-transform duration-200 ${
-                  zonesOpen ? "rotate-180" : ""
-                }`}
-              />
-            </button>
-
-            {zonesOpen && (
-              <div className="px-3 pb-3 pt-1.5 border-t border-white/12 grid grid-cols-1 gap-1.5">
-                {BADR_NEIGHBORHOODS.map((zone) => (
-                  <div
-                    key={zone}
-                    className="rounded-xl bg-white/10 px-3 py-2 text-xs font-bold text-white flex items-center gap-2"
-                  >
-                    <PinIcon className="w-3.5 h-3.5 text-[#FFC21A] shrink-0" />
-                    <span>{zone}</span>
-                  </div>
-                ))}
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {BADR_NEIGHBORHOODS.map((zone) => (
+              <div
+                key={zone}
+                className="rounded-xl bg-white/10 border border-white/12 px-3 py-2 text-xs font-bold text-[#FFF3D6] flex items-center gap-2 text-right"
+              >
+                <PinIcon className="w-3.5 h-3.5 text-[#FFC21A] shrink-0" />
+                <span className="leading-snug">{zone}</span>
               </div>
-            )}
+            ))}
           </div>
         </div>
 

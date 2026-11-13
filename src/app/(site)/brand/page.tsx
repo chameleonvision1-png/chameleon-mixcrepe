@@ -111,11 +111,11 @@ export default function BrandPage() {
   return (
     <div className="mx-auto max-w-7xl px-3.5 sm:px-6 lg:px-8 py-6 sm:py-10 space-y-10">
       {/* 1. Hero Banner */}
-      <section className="rounded-[32px] sm:rounded-[40px] bg-[#0D0D0D] mix-pattern-dark text-white border-2 border-[#FFC21A]/40 p-6 sm:p-10 lg:p-12 shadow-2xl grid lg:grid-cols-12 gap-8 items-center">
-        <div className="lg:col-span-7 text-center lg:text-right space-y-4">
+      <section className="rounded-[32px] sm:rounded-[40px] bg-[#0D0D0D] mix-pattern-dark text-white border-2 border-[#FFC21A]/40 p-6 sm:p-10 lg:p-12 shadow-2xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
+        <div className="lg:col-span-7 min-w-0 text-center lg:text-right space-y-4">
           <span className="inline-flex items-center gap-2 rounded-full bg-[#FFC21A] text-[#0D0D0D] px-4 py-1 text-xs font-en-display font-black tracking-wide">
             <PaletteIcon className="w-4 h-4 shrink-0" />
-            <span>GOLDEN STREET FOOD • BRAND IDENTITY SYSTEM</span>
+            <span>GOLDEN STREET FOOD • BRAND SYSTEM</span>
           </span>
 
           <h1 className="font-display text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight">
@@ -144,7 +144,7 @@ export default function BrandPage() {
           </div>
         </div>
 
-        <div className="lg:col-span-5 flex justify-center">
+        <div className="lg:col-span-5 min-w-0 flex justify-center">
           <div className="rounded-[28px] bg-[#171717] border-2 border-[#FFC21A] p-4 sm:p-5 shadow-2xl max-w-sm w-full text-center space-y-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img

@@ -27,7 +27,7 @@ export default async function BranchesPage() {
         </h1>
         <p className="text-xs sm:text-sm font-semibold text-white/80 max-w-2xl mx-auto">
           بجوار صيدلية العزبي وبنك QNB الأهلي — جلسات خارجية مريحة، استلام من
-          أمام المحل (Roadside collection)، وتوصيل سريع لكل أحياء مدينة بدر.
+          الفرع وتقديم للسيارة، وتوصيل سريع لكل أحياء مدينة بدر.
         </p>
       </div>
 

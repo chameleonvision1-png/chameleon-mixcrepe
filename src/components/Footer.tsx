@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { Branch, Settings } from "@/lib/types";
+import { useStore } from "./store";
 import {
   ChevronDownIcon,
   ExternalLinkIcon,
@@ -39,10 +40,11 @@ export function Footer({
   branches?: Branch[];
   settings?: Settings;
 }) {
+  const { cart, hydrated } = useStore();
+  const hasCart = hydrated && cart.length > 0;
   const [mobileOpen, setMobileOpen] = useState<
     "menu" | "discover" | "phones" | null
-  >("phones");
-  const [desktopPhonesOpen, setDesktopPhonesOpen] = useState(false);
+  >(null);
 
   const mainBranch = branches.find((b) => b.isActive) ?? branches[0];
   const phones = settings?.orderPhones?.length
@@ -81,33 +83,12 @@ export function Footer({
   };
 
   return (
-    <footer className="mt-10 pb-20 md:pb-8">
+    <footer className={`mt-10 ${hasCart ? "pb-20 md:pb-8" : "pb-6 md:pb-8"}`}>
       {/* Double-Framed Rounded Footer Shell (#0D0D0D Outer + #FFF3D6 Inner) */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6">
         <div className="rounded-[28px] sm:rounded-[34px] bg-[#0D0D0D] mix-pattern-dark p-3 sm:p-5 border-2 border-[#FFC21A]/35 shadow-[0_18px_45px_-16px_rgba(13,13,13,0.45)]">
           {/* Inner Cream Card */}
           <div className="rounded-[22px] sm:rounded-[26px] bg-[#FFF3D6] text-[#0D0D0D] overflow-hidden border border-[#0D0D0D]/10">
-            {/* 1. Top Symmetrical 3-Pill Utility Strip */}
-            <div className="px-4 sm:px-8 pt-5 pb-4 border-b border-[#0D0D0D]/10 flex flex-wrap items-center justify-center gap-2 sm:gap-3 text-center">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0D0D0D] text-[#FFC21A] px-3.5 py-1.5 text-xs font-black">
-                <PinIcon className="w-3.5 h-3.5 shrink-0" />
-                <span>مدينة بدر • مول 8 — شارع الجامعة الروسية</span>
-              </span>
-
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-[#FFC21A] text-[#0D0D0D] px-3.5 py-1.5 text-xs font-black">
-                <span>GOLDEN STREET FOOD • التوصيل مفتوح دائمًا</span>
-              </span>
-
-              <button
-                type="button"
-                onClick={() =>
-                  window.dispatchEvent(new CustomEvent("open-crepe-builder"))
-                }
-                className="inline-flex items-center gap-1.5 rounded-full bg-white hover:bg-[#0D0D0D] text-[#0D0D0D] hover:text-[#FFC21A] border border-[#0D0D0D]/15 px-3.5 py-1.5 text-xs font-black transition cursor-pointer"
-              >
-                <span>صمم كريبك — مكسها على مزاجك</span>
-              </button>
-            </div>
 
             {/* 2A. MOBILE COLLAPSIBLE DROPDOWNS (< lg) */}
             <div className="lg:hidden p-4 space-y-2.5">
@@ -310,46 +291,27 @@ export function Footer({
                   </span>
                 </a>
 
-                {/* Collapsible Phone Dropdown on Desktop */}
-                <div className="mt-3 w-full max-w-xs rounded-2xl bg-white border border-[#0D0D0D]/15 overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={() => setDesktopPhonesOpen((v) => !v)}
-                    aria-expanded={desktopPhonesOpen}
-                    className="w-full px-4 py-2.5 flex items-center justify-between text-xs font-black text-[#0D0D0D] hover:text-[#F59E0B] transition cursor-pointer"
-                  >
-                    <span className="flex items-center gap-1.5">
-                      <PhoneIcon className="w-3.5 h-3.5 text-[#F59E0B]" />
-                      <span>أرقام الطلبات ({phones.length} خطوط)</span>
-                    </span>
-                    <ChevronDownIcon
-                      className={`w-4 h-4 text-[#0D0D0D] transition-transform duration-200 ${
-                        desktopPhonesOpen ? "rotate-180" : ""
-                      }`}
-                    />
-                  </button>
-
-                  {desktopPhonesOpen && (
-                    <div
-                      className="px-3 pb-3 pt-1.5 border-t border-[#0D0D0D]/10 grid grid-cols-2 gap-1.5"
-                      dir="ltr"
-                    >
-                      {phones.map((ph, idx) => (
-                        <a
-                          key={ph}
-                          href={`tel:${ph}`}
-                          className={`rounded-full py-1.5 px-2.5 text-xs font-en font-extrabold flex items-center justify-center gap-1 border transition ${
-                            idx === 0
-                              ? "bg-[#0D0D0D] text-[#FFC21A] border-[#0D0D0D]"
-                              : "bg-[#FFF3D6] hover:bg-[#FFC21A] text-[#0D0D0D] border-[#0D0D0D]/15"
-                          }`}
-                        >
-                          <PhoneIcon className="w-3 h-3 shrink-0" />
-                          <span>{ph}</span>
-                        </a>
-                      ))}
-                    </div>
-                  )}
+                {/* Direct Two Order Lines on Desktop */}
+                <div className="mt-3 w-full max-w-xs space-y-1.5">
+                  <div className="text-[11px] font-black text-[#0D0D0D]/65">
+                    أرقام الطلبات والتوصيل السريع
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5" dir="ltr">
+                    {phones.map((ph, idx) => (
+                      <a
+                        key={ph}
+                        href={`tel:${ph}`}
+                        className={`rounded-full py-2 px-2.5 text-xs font-en font-extrabold flex items-center justify-center gap-1 border transition ${
+                          idx === 0
+                            ? "bg-[#0D0D0D] text-[#FFC21A] border-[#0D0D0D]"
+                            : "bg-white hover:bg-[#FFC21A] text-[#0D0D0D] border-[#0D0D0D]/15"
+                        }`}
+                      >
+                        <PhoneIcon className="w-3 h-3 shrink-0" />
+                        <span>{ph}</span>
+                      </a>
+                    ))}
+                  </div>
                 </div>
 
                 {/* Symmetrical 4-Icon Social Bar */}
@@ -375,11 +337,11 @@ export function Footer({
             </div>
 
             {/* 3. CENTERED, 100% UNCLIPPED FULL BRAND WORDMARK ("ميكس كريب وبيتزا") */}
-            <div className="w-full px-3 sm:px-8 pt-4 pb-5 sm:pb-6 border-t border-[#0D0D0D]/10 flex flex-col items-center justify-center text-center">
-              <span className="inline-block rounded-full bg-[#FFC21A] text-[#0D0D0D] px-4 py-0.5 text-[11px] sm:text-xs font-en-display font-black tracking-[0.14em] uppercase mb-1.5">
-                MIX CREPE & PIZZA • GOLDEN STREET FOOD
+            <div className="w-full px-4 sm:px-8 pt-4 pb-5 sm:pb-6 border-t border-[#0D0D0D]/10 flex flex-col items-center justify-center text-center">
+              <span className="inline-block rounded-full bg-[#FFC21A] text-[#0D0D0D] px-3.5 py-0.5 text-[10px] sm:text-xs font-en-display font-black tracking-[0.16em] uppercase mb-2 whitespace-nowrap">
+                MIX CREPE & PIZZA
               </span>
-              <div className="w-full font-display text-[8.8vw] sm:text-[7.4vw] lg:text-[84px] font-black leading-[1.06] tracking-tight text-[#0D0D0D] text-center whitespace-nowrap">
+              <div className="w-full px-2 font-display text-[clamp(1.6rem,6.5vw,4.75rem)] font-black leading-[1.12] tracking-tight text-[#0D0D0D] text-center">
                 ميكس كريب وبيتزا
               </div>
             </div>
@@ -389,7 +351,7 @@ export function Footer({
           <div className="px-4 sm:px-6 pt-4 pb-1 flex flex-col lg:flex-row items-center justify-between gap-2.5 text-xs text-white/85 text-center">
             <div className="flex flex-wrap items-center justify-center gap-x-2.5 gap-y-1">
               <span className="font-bold text-white">
-                © {new Date().getFullYear()} MIX Crepe & Pizza • ميكس كريب وبيتزا
+                جميع الحقوق محفوظة © {new Date().getFullYear()} ميكس كريب وبيتزا
                 — مدينة بدر
               </span>
               <span className="opacity-45 hidden sm:inline">•</span>

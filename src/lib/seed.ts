@@ -144,10 +144,10 @@ export function buildSeed(): DB {
         phone2: "01125119375",
         extraPhones: ["01098923225", "01125119375"],
         whatsapp: "201098923225",
-        hours: "مفتوح على مدار اليوم — توصيل سريع داخل مدينة بدر والمناطق القريبة",
+        hours: "مفتوح طوال اليوم • توصيل سريع",
         mapUrl: "https://maps.app.goo.gl/XC9GDwXD7cYGfKtF6",
         coordinates: "30.1413125, 31.7200625",
-        services: ["توصيل سريع", "استلام من المطعم", "جلسات خارجية Outdoor", "استلام من السيارة Roadside"],
+        services: ["توصيل سريع", "استلام من الفرع", "جلسات خارجية", "تقديم للسيارة"],
         deliveryFee: 0,
         minOrder: 0,
         deliveryAreas: [

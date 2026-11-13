@@ -157,25 +157,64 @@ await sharp({
   .png()
   .toFile(path.join(ROOT, "public/icon-maskable-512.png"));
 
-// 3. Brand Icon Only (from brand board right-hand icon variation, circular mask)
+// 3. Brand Icon Only (from brand board right-hand icon variation, exterior cream knockout)
+const ioCropW = 92;
+const ioCropH = 92;
 const iconOnlyCrop = await sharp(brandBoardSrc)
-  .extract({ left: 638, top: 55, width: 74, height: 74 })
-  .resize(512, 512, { kernel: "lanczos3" })
+  .extract({ left: 641, top: 44, width: ioCropW, height: ioCropH })
+  .resize(512, Math.round((512 * ioCropH) / ioCropW), { kernel: "lanczos3" })
   .ensureAlpha()
   .raw()
   .toBuffer({ resolveWithObject: true });
-const ioData = Buffer.from(iconOnlyCrop.data);
-for (let y = 0; y < 512; y++) {
-  for (let x = 0; x < 512; x++) {
-    const dist = Math.hypot(x - 255.5, y - 255.5);
-    const o = (y * 512 + x) * 4;
-    if (dist > 246) ioData[o + 3] = 0;
-    else if (dist > 242) ioData[o + 3] = Math.round(((246 - dist) / 4) * 255);
+{
+  const iw = iconOnlyCrop.info.width;
+  const ih = iconOnlyCrop.info.height;
+  const ioData = Buffer.from(iconOnlyCrop.data);
+  const visIo = new Uint8Array(iw * ih);
+  const qIo = new Int32Array(iw * ih);
+  let hIo = 0;
+  let tIo = 0;
+  const pushIo = (x, y) => {
+    if (x < 0 || x >= iw || y < 0 || y >= ih) return;
+    const id = y * iw + x;
+    if (visIo[id]) return;
+    const o = id * 4;
+    const r = ioData[o], g = ioData[o + 1], b = ioData[o + 2];
+    const mn = Math.min(r, g, b);
+    const mx = Math.max(r, g, b);
+    if (mn > 195 && mx - mn < 36) {
+      visIo[id] = 1;
+      qIo[tIo++] = id;
+    }
+  };
+  for (let x = 0; x < iw; x++) {
+    pushIo(x, 0);
+    pushIo(x, ih - 1);
   }
+  for (let y = 0; y < ih; y++) {
+    pushIo(0, y);
+    pushIo(iw - 1, y);
+  }
+  while (hIo < tIo) {
+    const id = qIo[hIo++];
+    const x = id % iw, y = (id / iw) | 0;
+    pushIo(x + 1, y); pushIo(x - 1, y); pushIo(x, y + 1); pushIo(x, y - 1);
+  }
+  for (let i = 0; i < iw * ih; i++) {
+    if (visIo[i]) ioData[i * 4 + 3] = 0;
+  }
+  const ioPng = await sharp(ioData, { raw: { width: iw, height: ih, channels: 4 } })
+    .trim()
+    .resize(480, 480, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toBuffer();
+  await sharp({
+    create: { width: 512, height: 512, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
+  })
+    .composite([{ input: ioPng, gravity: "center" }])
+    .webp({ lossless: true })
+    .toFile(path.join(ROOT, "public/logo-icon-only.webp"));
 }
-await sharp(ioData, { raw: { width: 512, height: 512, channels: 4 } })
-  .webp({ lossless: true })
-  .toFile(path.join(ROOT, "public/logo-icon-only.webp"));
 
 // 4. Monochrome Version (`logo-mono.webp`) & Reversed Version (`logo-reversed.webp`)
 await sharp(emblemPngBuf)
@@ -192,53 +231,236 @@ const revRaw = await sharp(emblemPngBuf)
   .toBuffer({ resolveWithObject: true });
 const revBuf = Buffer.from(revRaw.data);
 for (let i = 0; i < revBuf.length; i += 4) {
-  if (revBuf[i + 3] < 20) continue;
-  const lum = (revBuf[i] + revBuf[i + 1] + revBuf[i + 2]) / 3;
-  // Brighten dark rings/lettering cleanly to Cream (#FFF3D6) for dark backgrounds while preserving gold/orange tones
-  if (lum < 48) {
-    revBuf[i] = 255;
-    revBuf[i + 1] = 243;
-    revBuf[i + 2] = 214;
+  if (revBuf[i + 3] < 16) continue;
+  const r = revBuf[i];
+  const g = revBuf[i + 1];
+  const b = revBuf[i + 2];
+  const mx = Math.max(r, g, b);
+  const mn = Math.min(r, g, b);
+  const lum = (r + g + b) / 3;
+  // Smooth continuous anti-aliased cream remap for dark neutral areas (zero binary blotches)
+  if (lum < 110 && mx - mn < 55) {
+    const t = Math.max(0, Math.min(1, (105 - lum) / 75));
+    revBuf[i] = Math.round(r * (1 - t) + 255 * t);
+    revBuf[i + 1] = Math.round(g * (1 - t) + 243 * t);
+    revBuf[i + 2] = Math.round(b * (1 - t) + 214 * t);
   }
 }
 await sharp(revBuf, { raw: { width: 512, height: 512, channels: 4 } })
   .webp({ lossless: true })
   .toFile(path.join(ROOT, "public/logo-reversed.webp"));
 
-// 5. Horizontal Secondary Logos (`logo-horizontal.webp` for light bg, `logo-horizontal-light.webp` for dark bg)
-async function buildHorizontalLogo(mode) {
-  const isLightText = mode === "dark-bg";
-  const miColor = isLightText ? "#FFF3D6" : "#0D0D0D";
-  const subColor = isLightText ? "#FFC21A" : "#0D0D0D";
-  const xFill = "#F59E0B";
-  const xStroke = isLightText ? "#FFF3D6" : "#0D0D0D";
+// 5. Authentic Horizontal Logos (`logo-horizontal.webp` & `logo-horizontal-light.webp`)
+// Extracted pixel-accurately from the official 1024x1024 master mark (`mi`, swooping orange `x`, and `CREPE & PIZZA`).
+async function extractAuthenticWordmarkMasks() {
+  const { data, info } = await sharp(masterLogoSrc)
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const mw = info.width;
+  const ch = info.channels;
+  const px = (x, y) => {
+    const o = (y * mw + x) * ch;
+    return [data[o], data[o + 1], data[o + 2]];
+  };
 
-  const W = 940;
-  const H = 250;
-  const emblemSmall = await sharp(emblemPngBuf)
-    .resize(218, 218, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+  // Bounding box around official wordmark inside master crest
+  const bx0 = 215;
+  const by0 = 550;
+  const bw = 570; // covers x = 215..784
+  const bh = 268; // covers y = 550..817
+
+  const xMask = new Float32Array(bw * bh);
+  const vis = new Uint8Array(bw * bh);
+  const q = new Int32Array(bw * bh);
+  let head = 0;
+  let tail = 0;
+
+  const pushX = (lx, ly) => {
+    if (lx < 0 || lx >= bw || ly < 0 || ly >= bh) return;
+    if (by0 + ly > 734) return;
+    const id = ly * bw + lx;
+    if (vis[id]) return;
+    const [r, g, b] = px(bx0 + lx, by0 + ly);
+    if ((r + g + b) / 3 < 105) return; // stop at closed dark outline of `x`
+    vis[id] = 1;
+    q[tail++] = id;
+  };
+  pushX(618 - bx0, 648 - by0);
+  while (head < tail) {
+    const id = q[head++];
+    const lx = id % bw;
+    const ly = (id / bw) | 0;
+    pushX(lx + 1, ly);
+    pushX(lx - 1, ly);
+    pushX(lx, ly + 1);
+    pushX(lx, ly - 1);
+  }
+
+  for (let i = 0; i < vis.length; i++) {
+    if (vis[i]) xMask[i] = 1;
+  }
+
+  // Soft 1.2px edge feather on x interior for anti-aliased smoothness
+  const xStroke = new Float32Array(bw * bh);
+  const R = 6;
+  const R2 = R * R;
+  for (let ly = 0; ly < bh; ly++) {
+    for (let lx = 0; lx < bw; lx++) {
+      const id = ly * bw + lx;
+      if (vis[id]) {
+        xStroke[id] = 1;
+        continue;
+      }
+      let minDist2 = 9999;
+      const yMin = Math.max(0, ly - R);
+      const yMax = Math.min(bh - 1, ly + R);
+      const xMin = Math.max(0, lx - R);
+      const xMax = Math.min(bw - 1, lx + R);
+      for (let yy = yMin; yy <= yMax; yy++) {
+        for (let xx = xMin; xx <= xMax; xx++) {
+          if (vis[yy * bw + xx]) {
+            const d2 = (xx - lx) * (xx - lx) + (yy - ly) * (yy - ly);
+            if (d2 < minDist2) minDist2 = d2;
+          }
+        }
+      }
+      if (minDist2 <= R2) {
+        const d = Math.sqrt(minDist2);
+        // Expand x fill slightly by 0.8px into dark border, and outer 4.8px forms crisp stroke
+        if (d <= 1.2) xMask[id] = Math.max(xMask[id], 1 - d / 1.4);
+        xStroke[id] = d <= 4.4 ? 1 : Math.max(0, 1 - (d - 4.4) / 1.4);
+      }
+    }
+  }
+
+  // Extract authentic `mi` glyph mask (`x: 222..528, y: 558..731`) strictly excluding curved bowl rim
+  const miMask = new Float32Array(bw * bh);
+  for (let ly = 558 - by0; ly <= 731 - by0; ly++) {
+    const gy = by0 + ly;
+    for (let lx = 0; lx <= 528 - bx0; lx++) {
+      const gx = bx0 + lx;
+      if (gx < 222) continue;
+      // Exclude diagonal top-left bowl rim sliver above `m`'s left arch (preserving `i` dot at x>=465, y>=559)
+      if (gx < 455 && gy < 565) continue;
+      if (gy <= 574 && gx < 252) continue;
+      // Ignore bowl rim pixels at bottom gaps between `m` legs and `i`
+      if (gy > 712 && (gx < 230 || (gx > 286 && gx < 301) || (gx > 352 && gx < 371) || (gx > 425 && gx < 467))) {
+        continue;
+      }
+      const id = ly * bw + lx;
+      const [r, g, b] = px(gx, gy);
+      const mx = Math.max(r, g, b);
+      if (mx < 115) {
+        const alpha = Math.max(0, Math.min(1, (115 - mx) / 68));
+        miMask[id] = alpha;
+      }
+    }
+  }
+
+  // Extract `CREPE & PIZZA` authentic bright lettering from dark ribbon (`y: 765..815, x: 228..762`)
+  const subMask = new Float32Array(bw * bh);
+  for (let ly = 765 - by0; ly <= 815 - by0; ly++) {
+    for (let lx = 228 - bx0; lx <= 762 - bx0; lx++) {
+      const id = ly * bw + lx;
+      const [r, g, b] = px(bx0 + lx, by0 + ly);
+      const lum = (r + g + b) / 3;
+      if (lum > 35) {
+        subMask[id] = Math.max(0, Math.min(1, (lum - 35) / 160));
+      }
+    }
+  }
+
+  return { bw, bh, xMask, xStroke, miMask, subMask };
+}
+
+const wordmarkMasks = await extractAuthenticWordmarkMasks();
+
+async function renderWordmarkLayer(mode) {
+  const isLightText = mode === "dark-bg";
+  const { bw, bh, xMask, xStroke, miMask, subMask } = wordmarkMasks;
+  const rgba = Buffer.alloc(bw * bh * 4);
+
+  const miRGB = isLightText ? [255, 243, 214] : [13, 13, 13];
+  const strokeRGB = isLightText ? [13, 13, 13] : [13, 13, 13];
+  const subRGB = isLightText ? [255, 194, 26] : [13, 13, 13];
+
+  for (let ly = 0; ly < bh; ly++) {
+    const gradT = Math.max(0, Math.min(1, (ly - 25) / 155));
+    const xr = Math.round(255 * (1 - gradT) + 245 * gradT);
+    const xg = Math.round(194 * (1 - gradT) + 150 * gradT);
+    const xb = Math.round(26 * (1 - gradT) + 8 * gradT);
+
+    for (let lx = 0; lx < bw; lx++) {
+      const id = ly * bw + lx;
+      const o = id * 4;
+      const ma = miMask[id];
+      const sa = xStroke[id];
+      const xa = xMask[id];
+      const ba = subMask[id];
+
+      // Composite layer order: bottom = `mi` & `CREPE & PIZZA`, then `x` stroke halo, top = orange/gold `x`
+      let r = 0, g = 0, b = 0, a = 0;
+
+      if (ma > 0.01) {
+        r = miRGB[0];
+        g = miRGB[1];
+        b = miRGB[2];
+        a = ma;
+      } else if (ba > 0.01) {
+        r = subRGB[0];
+        g = subRGB[1];
+        b = subRGB[2];
+        a = ba;
+      }
+
+      if (sa > 0.01) {
+        const outA = sa + a * (1 - sa);
+        if (outA > 0) {
+          r = (strokeRGB[0] * sa + r * a * (1 - sa)) / outA;
+          g = (strokeRGB[1] * sa + g * a * (1 - sa)) / outA;
+          b = (strokeRGB[2] * sa + b * a * (1 - sa)) / outA;
+          a = outA;
+        }
+      }
+
+      if (xa > 0.01) {
+        const outA = xa + a * (1 - xa);
+        if (outA > 0) {
+          r = (xr * xa + r * a * (1 - xa)) / outA;
+          g = (xg * xa + g * a * (1 - xa)) / outA;
+          b = (xb * xa + b * a * (1 - xa)) / outA;
+          a = outA;
+        }
+      }
+
+      rgba[o] = Math.round(r);
+      rgba[o + 1] = Math.round(g);
+      rgba[o + 2] = Math.round(b);
+      rgba[o + 3] = Math.round(a * 255);
+    }
+  }
+
+  return sharp(rgba, { raw: { width: bw, height: bh, channels: 4 } })
+    .resize(540, 224, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
     .png()
     .toBuffer();
+}
 
-  const textSvg = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" width="${W}" height="${H}" viewBox="0 0 ${W} ${H}">
-    <g transform="translate(245, 22)">
-      <!-- Stylized lowercase 'm' & 'i' matching official brand mark -->
-      <text x="0" y="128" font-family="Poppins, Montserrat, Arial Black, sans-serif" font-weight="900" font-size="146" letter-spacing="-4" fill="${miColor}">mi</text>
-      <!-- Dynamic tilted Warm Orange X -->
-      <g transform="translate(178, 18)">
-        <path d="M18 16 C44 48, 78 72, 118 104 L92 114 C62 88, 34 62, 6 24 Z" fill="${xFill}" stroke="${xStroke}" stroke-width="5" stroke-linejoin="round"/>
-        <path d="M114 14 C80 48, 44 82, 8 112 L34 118 C64 88, 96 54, 130 22 Z" fill="#FFC21A" stroke="${xStroke}" stroke-width="5" stroke-linejoin="round"/>
-      </g>
-      <text x="8" y="188" font-family="Montserrat, Poppins, Arial, sans-serif" font-weight="800" font-size="40" letter-spacing="5.5" fill="${subColor}">CREPE &amp; PIZZA</text>
-    </g>
-  </svg>`);
+async function buildHorizontalLogo(mode) {
+  const W = 820;
+  const H = 252;
+  const emblemSmall = await sharp(emblemPngBuf)
+    .resize(216, 216, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .png()
+    .toBuffer();
+  const wordmarkLayer = await renderWordmarkLayer(mode);
 
   return sharp({
     create: { width: W, height: H, channels: 4, background: { r: 0, g: 0, b: 0, alpha: 0 } },
   })
     .composite([
-      { input: emblemSmall, left: 16, top: 16 },
-      { input: textSvg, left: 0, top: 0 },
+      { input: emblemSmall, left: 12, top: 18 },
+      { input: wordmarkLayer, left: 248, top: 14 },
     ])
     .trim()
     .webp({ lossless: true });

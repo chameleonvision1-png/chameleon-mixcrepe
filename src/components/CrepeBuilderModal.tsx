@@ -123,12 +123,12 @@ export function CrepeBuilderModal() {
           <div dir="rtl" className="min-w-0 text-center">
             <h2
               id="crepe-builder-title"
-              className="font-display text-base sm:text-lg font-black text-[#FFC21A] truncate"
+              className="font-display text-base sm:text-lg font-black text-[#FFC21A]"
             >
-              مكسها على مزاجك — صمّم كريبك بنفسك
+              مكسها على مزاجك
             </h2>
-            <p className="text-[11px] sm:text-xs font-bold text-white/75 truncate">
-              اختار القاعدة + حتى 3 حشوات + الجبنة + الصوصات والإضافات
+            <p className="text-[11px] sm:text-xs font-bold text-white/75 leading-snug">
+              اختار القاعدة والحشوات والصوصات بحساب فوري
             </p>
           </div>
 
